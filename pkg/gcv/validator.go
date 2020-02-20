@@ -18,6 +18,8 @@ package gcv
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"time"
 
 	"github.com/forseti-security/config-validator/pkg/api/validator"
 	asset2 "github.com/forseti-security/config-validator/pkg/asset"
@@ -98,15 +100,24 @@ func newCFClient(
 		return nil, errors.Wrap(err, "unable to set up Constraint Framework client")
 	}
 
+	timestamps := []time.Time{time.Now()}
 	ctx := context.Background()
 	var errs multierror.Errors
 	for _, template := range templates {
 		if _, err := cfClient.AddTemplate(ctx, template); err != nil {
 			errs.Add(errors.Wrapf(err, "failed to add template %v", template))
 		}
+		timestamps = append(timestamps, time.Now())
 	}
 	if !errs.Empty() {
 		return nil, errs.ToError()
+	}
+
+	fmt.Printf("num\tincremental\tcumulative\t (target: %s)\n", targetHandler.GetName())
+	for i := 1; i < len(timestamps); i++ {
+		inc := float64(timestamps[i].Sub(timestamps[i-1])) / 1e6
+		cum := float64(timestamps[i].Sub(timestamps[0])) / 1e6
+		fmt.Printf("%d\t%0.2f\t%0.2f\n", i, inc, cum)
 	}
 
 	for _, constraint := range constraints {

@@ -23,3 +23,7 @@ make format    reformat code
 
 ## Disclaimer
 This is not an officially supported Google product.
+
+# Timing stuff
+
+run ./run-timing.sh to see the O(n^2) printfs
